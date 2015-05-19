@@ -1,2 +1,3 @@
 %{"bencodex": {:hex, :bencodex, "1.0.0"},
+  "elixir_bencode": {:git, "git://github.com/LeeroyDing/elixir_bencode.git", "a30c984e37e30c6d69079ae31c3be2a8cccf7f9c", []},
   "hexate": {:hex, :hexate, "0.5.1"}}

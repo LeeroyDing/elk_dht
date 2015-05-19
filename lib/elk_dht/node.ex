@@ -9,9 +9,9 @@ defmodule ElkDHT.Node do
   @doc """
   Starts the node.
   """
-  def start_link(conf = %{id: node_id, host: host, port: port}, opts \\ []) do
+  def start_link(state = %{id: node_id, host: host, port: port}, opts \\ []) do
     Logger.debug "Starting a new node #{Hexate.encode(node_id)}: #{host}:#{port}"
-    GenServer.start_link __MODULE__, conf, opts ++ [name: String.to_atom("#{Hexate.encode(node_id)}")]
+    GenServer.start_link __MODULE__, state, opts ++ [name: String.to_atom("#{Hexate.encode(node_id)}")]
   end
 
   @doc """
@@ -69,7 +69,7 @@ defmodule ElkDHT.Node do
                  "a" => %{ "id" => sender_id,
                            "target" => node_id }
                }
-    Logger.debug "find_node msg to #{Hexate.encode(node_id)}"
+    Logger.debug "find_node msg to #{Hexate.encode(node_id)}, t: #{Hexate.encode(trans_id)}"
     send_message node_id, message, socket, trans_id
   end
 
@@ -116,12 +116,13 @@ defmodule ElkDHT.Node do
     {:noreply, %{state | access_time: :os.timestamp}}
   end
 
-  def handle_cast({:send_message, message, socket, trans_id}, state = %{host: host, port: port}) do
+  def handle_cast({:send_message, message, socket, trans_id}, state = %{id: node_id, host: host, port: port}) do
     encoded = message
     |> Map.put("v", Utils.get_version)
     |> Map.put("t", trans_id)
-    |> Bencodex.encode
+    |> Bencode.encode!
     :gen_udp.send socket, host, port, [encoded]
+    Logger.debug "Message sent to #{to_string(host)}:#{port}, id: #{Hexate.encode node_id}, t: #{Hexate.encode trans_id}"
     {:noreply, state}
   end
 
